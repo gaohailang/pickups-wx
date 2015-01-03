@@ -1,0 +1,17 @@
+{
+    "name": "pickups-weixin",
+    "version": "0.0.0",
+    "description": "",
+    "main": "app.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "sivagao <sivagao@126.com> (http://weibo.com/1siva)",
+    "license": "ISC",
+    "dependencies": {
+        "body-parser": "^1.10.0",
+        "express": "^4.10.6",
+        "lodash": "^2.4.1",
+        "mongoose": "^3.8.21"
+    }
+}

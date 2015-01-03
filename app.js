@@ -1,66 +1,71 @@
-var mongoose = require('mongoose');
+var _models = require('./model');
+var List = _models.List;
+var Item = _models.Item;
 
-var MODE_ENUM = ['list', 'tinder'];
+var express = require('express');
+var x = require('lodash');
 
-function timestampOn(schema, options) {
-    schema.add({
-        modifiedAt: Date
-    });
-    schema.add({
-        createdAt: Date
-    });
+var app = express();
+var server = require('http').createServer(app);
+var bodyParser = require('body-parser');
 
-    schema.pre('save', function(next) {
-        var now = Date.now()
-        this.modifiedAt = now;
-        if (!this.createdAt) {
-            this.createdAt = now;
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({
+    extended: false
+}));
+// parse application/json
+app.use(bodyParser.json());
+
+/* used in admin editor */
+app.get('/api/v1/lists', function(req, res) {
+    return List.find(function(err, lists) {
+        if (!err) {
+            return res.send(lists);
+        } else {
+            return console.log(err);
         }
-        next();
     });
-}
-
-var ItemSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        match: /.{2,15}/
-    },
-    desc: {
-        type: String,
-        match: /.{10,120}/
-    },
-    image: {
-        type: String,
-        match: /(?:http(?:s)?:\/\/)?(?:www\.)?(?:[\w-]*)\.\w{2,}/
-    }
+});
+app.post('/api/v1/lists', function(req, res) {
+    console.log("POST: ");
+    console.log(req.body);
+    var list = new List(req.body);
+    list.save(function(err) {
+        if (!err) {
+            return console.log("created");
+        } else {
+            return console.log(err);
+        }
+    });
+    return res.send(list);
 });
 
-var ListSchema = new mongoose.Schema({
-    title: {
-        type: String,
-        match: /.{5,15}/
-    },
-    yeahText: {
-        type: String,
-        default: '喜欢'
-    },
-    nopeText: {
-        type: String,
-        default: '不喜欢'
-    },
-    mode: {
-        type: String,
-        enum: MODE_ENUM
-    },
-    desc: {
-        type: String,
-        match: /.{10,200}/
-    },
-    items: [ItemSchema]
+app.put('/api/v1/lists/:id', function(req, res) {
+    return List.findById(req.params.id, function(err, list) {
+        x.extend(list, req.body);
+        return list.save(function(err) {
+            if (!err) {
+                console.log("updated");
+            } else {
+                console.log(err);
+            }
+            return res.send(list);
+        });
+    });
 });
 
-ItemSchema.plugin(timestampOn);
-ListSchema.plugin(timestampOn);
+app.delete('/api/v1/lists/:id', function(req, res) {
+    return List.findById(req.params.id, function(err, list) {
+        return list.remove(function(err) {
+            if (!err) {
+                console.log("removed");
+                return res.send('');
+            } else {
+                console.log(err);
+            }
+        });
+    });
+});
 
-var Item = db.model('person', ItemSchema);
-var List = db.model('person', ListSchema);
+app.use(express.static(__dirname + '/public'));
+server.listen(5000, '0.0.0.0');
