@@ -10,6 +10,14 @@
     <script src="http://code.angularjs.org/1.2.5/angular.js"></script>
     <script src="http://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.12.0/ui-bootstrap.js"></script>
     <script src="http://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.12.0/ui-bootstrap-tpls.js"></script>
+
+    <style type="text/css">
+        .item-plus-wrap {
+            font-size: 80px;
+            line-height: 180px;
+            text-align: center;
+        }
+    </style>
 </head>
 <body ng-controller="idxCtrl">
 
@@ -52,6 +60,91 @@
                     </td>
                 </tr>
             </table>
+
+            <div class="item-editor" ng-controller="formCtrl">
+                <h2>编辑/创建新的 List</h2>
+
+                <form class="form-horizontal">
+                    <!-- input -->
+                  <div class="form-group">
+                    <label class="col-sm-2 control-label">标题</label>
+                    <div class="col-sm-10">
+                      <input type="email" class="form-control" placeholder="输入 Title">
+                    </div>
+                  </div>
+
+                    <!-- yeah/nope -->
+                  <div class="form-group">
+                    <label class="col-sm-2 control-label">YeahText</label>
+                    <div class="col-sm-10">
+                      <input type="email" class="form-control" placeholder="喜欢">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="col-sm-2 control-label">NopeText</label>
+                    <div class="col-sm-10">
+                      <input type="email" class="form-control" placeholder="不喜欢">
+                    </div>
+                  </div>
+
+                  <!-- desc  -->
+                  <div class="form-group">
+                    <label class="col-sm-2 control-label">描述</label>
+                    <div class="col-sm-10">
+                      <textarea class="form-control" rows="3"></textarea>
+                    </div>
+                  </div>
+
+                  <!-- items with plus btn -->
+                  <div class="form-group">
+                    <label class="col-sm-2 control-label">元素</label>
+                    <div class="col-sm-offset-2 col-sm-10">
+                      <div class="row">
+                          <div class="col-sm-6" ng-repeat="item in listData.items track by $index">
+                              <form class="form-horizontal">
+                                <div class="form-group">
+                                  <label class="col-sm-2 control-label">名称</label>
+                                  <div class="col-sm-10">
+                                    <input type="email" class="form-control">
+                                  </div>
+                                </div>
+                                <div class="form-group">
+                                  <label for="inputPassword3" class="col-sm-2 control-label">描述</label>
+                                  <div class="col-sm-10">
+                                    <textarea class="form-control" rows="3"></textarea>
+                                  </div>
+                                </div>
+
+                                <div class="form-group">
+                                  <label class="col-sm-2 control-label">图片</label>
+                                  <div class="col-sm-10">
+                                    <p>上传：<input type="file"></p>
+                                    <p>提供地址：<input type="url" class="form-control"></p>
+                                  </div>
+                                </div>
+                              </form>
+                          </div>
+                          <div class="col-sm-6">
+                                <p> 添加新的 Item </p>
+                                <div class="item-plus-wrap">
+                                    <i class="glyphicon glyphicon-plus" ng-click="addItem()"></i>
+                                </div>
+                          </div>
+                      </div>
+                    </div>
+                  </div>
+
+
+                  <div class="form-group">
+                    <div class="col-sm-offset-2 col-sm-10">
+                      <button type="submit" class="btn btn-default">提交</button>
+                    </div>
+                  </div>
+                </form>
+
+            </div>
+
+            <div class="item-preview"></div>
         </div>
     </div>
 
@@ -61,6 +154,19 @@
             $http.get('/api/v1/lists').then(function(r) {
                 $scope.lists = r.data;
             });
+        });
+
+        app.controller('formCtrl', function($scope) {
+            $scope.listData = {
+                items: []
+            };
+
+            $scope.addItem = function() {
+                $scope.listData.items.push({});
+            };
+            $scope.removeItem = function(i) {
+                // $scope.listData.items.indexOf(i)
+            };
         });
 
         angular.element(document).ready(function() {
