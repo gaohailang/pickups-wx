@@ -27,8 +27,6 @@ app.get('/api/v1/lists', function(req, res) {
     });
 });
 app.post('/api/v1/lists', function(req, res) {
-    console.log("POST: ");
-    console.log(req.body);
     var list = new List(req.body);
     list.save(function(err) {
         if (!err) {

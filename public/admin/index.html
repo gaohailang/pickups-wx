@@ -10,6 +10,7 @@
     <script src="http://code.angularjs.org/1.2.5/angular.js"></script>
     <script src="http://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.12.0/ui-bootstrap.js"></script>
     <script src="http://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.12.0/ui-bootstrap-tpls.js"></script>
+    <script src="http://static.wdjimg.com/ajax/libs/underscore.js/1.6.0/underscore-min.js"></script>
 
     <style type="text/css">
         .item-plus-wrap {
@@ -39,7 +40,7 @@
     <div class="container">
         <div class="row">
             <!-- 设想：三列布局|list|item detail form|item preivew -->
-            <table class="table">
+            <table class="table" ng-controller="listCtrl">
                 <tr>
                     <th>标题</th>
                     <th>描述</th>
@@ -55,8 +56,8 @@
                         <span ng-repeat="ii in i.items">{{ii.name}}</span>
                     </td>
                     <td>
-                         <button class="btn">操作</button>
-                         <button class="btn">删除</button>
+                         <button class="btn" ng-click="editHandler(i)">操作</button>
+                         <button class="btn" ng-click="delListHandler(i)">删除</button>
                     </td>
                 </tr>
             </table>
@@ -69,7 +70,7 @@
                   <div class="form-group">
                     <label class="col-sm-2 control-label">标题</label>
                     <div class="col-sm-10">
-                      <input type="email" class="form-control" placeholder="输入 Title">
+                      <input type="text" ng-model="currentList.title" class="form-control" placeholder="输入 Title">
                     </div>
                   </div>
 
@@ -77,13 +78,13 @@
                   <div class="form-group">
                     <label class="col-sm-2 control-label">YeahText</label>
                     <div class="col-sm-10">
-                      <input type="email" class="form-control" placeholder="喜欢">
+                      <input type="text" ng-model="currentList.yeahText" class="form-control" placeholder="喜欢">
                     </div>
                   </div>
                   <div class="form-group">
                     <label class="col-sm-2 control-label">NopeText</label>
                     <div class="col-sm-10">
-                      <input type="email" class="form-control" placeholder="不喜欢">
+                      <input type="text" ng-model="currentList.nopeText" class="form-control" placeholder="不喜欢">
                     </div>
                   </div>
 
@@ -91,7 +92,7 @@
                   <div class="form-group">
                     <label class="col-sm-2 control-label">描述</label>
                     <div class="col-sm-10">
-                      <textarea class="form-control" rows="3"></textarea>
+                      <textarea class="form-control" rows="3" ng-model="currentList.desc"></textarea>
                     </div>
                   </div>
 
@@ -100,18 +101,18 @@
                     <label class="col-sm-2 control-label">元素</label>
                     <div class="col-sm-offset-2 col-sm-10">
                       <div class="row">
-                          <div class="col-sm-6" ng-repeat="item in listData.items track by $index">
+                          <div class="col-sm-6" ng-repeat="item in currentList.items track by $index">
                               <form class="form-horizontal">
                                 <div class="form-group">
                                   <label class="col-sm-2 control-label">名称</label>
                                   <div class="col-sm-10">
-                                    <input type="email" class="form-control">
+                                    <input type="text" class="form-control" ng-model="item.name">
                                   </div>
                                 </div>
                                 <div class="form-group">
                                   <label for="inputPassword3" class="col-sm-2 control-label">描述</label>
                                   <div class="col-sm-10">
-                                    <textarea class="form-control" rows="3"></textarea>
+                                    <textarea class="form-control" rows="4" ng-model="item.desc"></textarea>
                                   </div>
                                 </div>
 
@@ -119,7 +120,8 @@
                                   <label class="col-sm-2 control-label">图片</label>
                                   <div class="col-sm-10">
                                     <p>上传：<input type="file"></p>
-                                    <p>提供地址：<input type="url" class="form-control"></p>
+                                    <p>提供地址：<input type="url" class="form-control" ng-model="item.image"></p>
+                                    <p><img ng-src="{{item.image}}" /></p>
                                   </div>
                                 </div>
                               </form>
@@ -137,36 +139,83 @@
 
                   <div class="form-group">
                     <div class="col-sm-offset-2 col-sm-10">
-                      <button type="submit" class="btn btn-default">提交</button>
+                      <button type="submit" class="btn btn-default" ng-click="saveList()">提交</button>
                     </div>
                   </div>
                 </form>
 
             </div>
 
-            <div class="item-preview"></div>
+            <div class="item-preview" ng-controller="previewCtrl"></div>
         </div>
     </div>
 
     <script type="text/javascript">
         var app = angular.module('App', ['ui.bootstrap']);
-        app.controller('idxCtrl', function($scope, $http) {
-            $http.get('/api/v1/lists').then(function(r) {
-                $scope.lists = r.data;
-            });
+        app.controller('idxCtrl', function($scope) {
+          $scope.lists = [];
+          $scope.currentList = {};
         });
 
-        app.controller('formCtrl', function($scope) {
-            $scope.listData = {
+        app.controller('listCtrl', function($scope, $http) {
+            $http.get('/api/v1/lists').then(function(r) {
+                $scope.$parent.lists = r.data;
+            });
+
+            $scope.editHandler = function(i) {
+              $scope.$parent.currentList = _.clone(i);
+            };
+
+            $scope.delListHandler = function(i) {
+              if(!window.confirm('你确定要删除吗？')) return;
+              $http.delete('/api/v1/lists/'+i._id).then(function() {
+                $scope.$parent.lists.splice($scope.lists.indexOf(i), 1);
+              });
+            };
+        });
+
+        app.controller('formCtrl', function($scope, $http) {
+            // Todo: use mode to specific
+            $scope.$parent.currentList = {
                 items: []
             };
 
             $scope.addItem = function() {
-                $scope.listData.items.push({});
+                $scope.currentList.items.push({});
             };
             $scope.removeItem = function(i) {
                 // $scope.listData.items.indexOf(i)
             };
+
+            $scope.saveList = function() {
+              var mode = $scope.currentList._id?'edit':'create';
+              var methodMap = {
+                edit: 'PUT',
+                create: 'POST'
+              };
+              $http({
+                method: methodMap[mode],
+                url: '/api/v1/lists/'+$scope.currentList._id, // try
+                data: $scope.currentList
+              }).then(function(r) {
+                if(mode === 'edit') {
+                  _.each($scope.lists, function(i) {
+                    if(i._id === r.data._id) {
+                      // why not work i = r.data?!
+                      _.extend(i, r.data);
+                      // i.title = r.data.title;
+                    }
+                  });
+                } else {
+                  // add to lists
+                  $scope.lists.push(r.data);
+                }
+              });
+            };
+        });
+
+        app.controller('previewCtrl', function($scope) {
+
         });
 
         angular.element(document).ready(function() {
